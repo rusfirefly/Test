@@ -1,119 +1,120 @@
 <!DOCTYPE html>
-<html lang="en-us">
-  <head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Farm World</title>
+    
+    <!-- Telegram Web App SDK (если нужно) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>FarmsWorldGame</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-
-    <!-- В раздел <head> -->
-<meta name="screen-orientation" content="portrait">
-<meta name="full-screen" content="yes">
-<meta name="x5-orientation" content="portrait">
-<meta name="x5-fullscreen" content="true">
 
     <style>
-      /* Минимальные стили для предотвращения скачков контента */
-      body, html {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background: #000;
-      }
-      #unity-container {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-      }
-      #unity-canvas {
-        width: 100%;
-        height: 100%;
-        background: #000;
-      }
+        * {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vmin; /* 9:16 aspect ratio */
+            height: 177.78vmin; /* 16/9 = 1.7778 */
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #unity-canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Loading screen */
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+        }
     </style>
-  </head>
-  <body>
-    <div id="unity-container">
-      <canvas id="unity-canvas"></canvas>
-      <div id="loading" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white;">
-        Loading...
-      </div>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="unity-canvas"></canvas>
+        <div id="loading-overlay">
+            <progress value="0" max="1"></progress>
+            <p>Loading...</p>
+        </div>
     </div>
 
     <script>
-      // 1. Базовая инициализация
-      function showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.style = 'position: fixed; top: 0; left: 0; right: 0; background: red; color: white; padding: 10px;';
-        errorDiv.textContent = message;
-        document.body.appendChild(errorDiv);
-        console.error(message);
-      }
+        const buildUrl = "Build";
+        const config = {
+            dataUrl: buildUrl + "/YOUR_GAME.data",
+            frameworkUrl: buildUrl + "/YOUR_GAME.framework.js",
+            codeUrl: buildUrl + "/YOUR_GAME.wasm",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "YourCompany",
+            productName: "YourGame",
+            productVersion: "1.0",
+            devicePixelRatio: window.devicePixelRatio || 1,
+            matchWebGLToCanvasSize: true,
+        };
 
-      // 2. Проверка поддержки WebAssembly
-      if (!WebAssembly) {
-        showError('Ваш браузер не поддерживает WebAssembly. Обновите браузер!');
-        throw new Error('WebAssembly not supported');
-      }
-
-      // 3. Инициализация Telegram WebApp
-      if (window.Telegram && Telegram.WebApp) {
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-      } else {
-        console.warn('Telegram WebApp API не загружен');
-      }
-
-      // 4. Конфигурация Unity
-      const buildPath = 'Build';
-      const config = {
-        dataUrl: `${buildPath}/Build.data`,
-        frameworkUrl: `${buildPath}/Build.framework.js`,
-        codeUrl: `${buildPath}/Build.wasm`,
-        streamingAssetsUrl: 'StreamingAssets',
-        companyName: 'DefaultCompany',
-        productName: 'FarmsWorldGame',
-        productVersion: '1.0',
-        devicePixelRatio: 1 // Фиксированное значение для мобильных
-      };
-
-      // 5. Загрузка скрипта Unity
-      const script = document.createElement('script');
-      script.src = `${buildPath}/Build.loader.js`;
-      script.onerror = () => showError('Ошибка загрузки скриптов игры!');
-      
-      script.onload = () => {
-        if (!window.createUnityInstance) {
-          showError('Unity Loader не загружен!');
-          return;
+        // Mobile orientation handling
+        function handleResize() {
+            const container = document.getElementById('gameContainer');
+            const isPortrait = window.innerHeight > window.innerWidth;
+            
+            if (isPortrait) {
+                container.style.width = '100vmin';
+                container.style.height = '177.78vmin';
+            } else {
+                // Optional: handle landscape mode
+                container.style.width = '100vmin';
+                container.style.height = '177.78vmin';
+            }
         }
 
-        // 6. Создание экземпляра Unity
-        window.createUnityInstance(document.querySelector('#unity-canvas'), config, (progress) => {
-          document.querySelector('#loading').textContent = `Loading ${Math.round(progress * 100)}%`;
-        })
-        .then((unityInstance) => {
-          document.querySelector('#loading').remove();
-          
-          // 7. Адаптация под мобильные устройства
-          const resizeHandler = () => {
-            const canvas = document.querySelector('#unity-canvas');
-            canvas.style.width = window.innerWidth + 'px';
-            canvas.style.height = window.innerHeight + 'px';
-          };
-          
-          window.addEventListener('resize', resizeHandler);
-          resizeHandler();
-        })
-        .catch((error) => {
-          showError(`Ошибка запуска: ${error.message}`);
-        });
-      };
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize);
+        handleResize();
 
-      document.body.appendChild(script);
+        // Initialize Unity
+        const script = document.createElement('script');
+        script.src = buildUrl + "/YOUR_GAME.loader.js";
+        script.onload = () => {
+            createUnityInstance(document.querySelector("#unity-canvas"), config, (progress) => {
+                document.querySelector("progress").value = progress;
+            }).then((unityInstance) => {
+                document.getElementById("loading-overlay").style.display = "none";
+                
+                // Telegram WebApp initialization (если нужно)
+                if (typeof Telegram !== 'undefined') {
+                    Telegram.WebApp.ready();
+                    Telegram.WebApp.expand();
+                }
+            }).catch((message) => {
+                console.error('Unity initialization failed:', message);
+            });
+        };
+        document.body.appendChild(script);
     </script>
-  </body>
+</body>
 </html>
