@@ -17,7 +17,7 @@
         }
 
         body {
-            background: #000;
+            background: #123;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -105,7 +105,7 @@
             }).then((unityInstance) => {
                 document.getElementById("loading-overlay").style.display = "none";
                 
-                // Telegram WebApp initialization (если нужно)
+                // Telegram WebApp initialization
                 if (typeof Telegram !== 'undefined') {
                     Telegram.WebApp.ready();
                     Telegram.WebApp.expand();
@@ -116,5 +116,9 @@
         };
         document.body.appendChild(script);
     </script>
+
+    <!-- Eruda is console for mobile browsers -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
 </body>
 </html>
